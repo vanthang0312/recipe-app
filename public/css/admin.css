@@ -1,0 +1,37 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.admin-search {
+  min-width: 260px;
+  border-radius: 14px;
+  border: 1px solid #ffe0b3;
+  padding: 10px 14px;
+  background: #fffdf9;
+}
+
+.admin-select {
+  min-width: 160px;
+  border-radius: 14px;
+  border: 1px solid #ffe0b3;
+  padding: 10px 14px;
+  background: #fffdf9;
+}
+
+.admin-card {
+  border-radius: 18px;
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.08);
+}
+
+.btn {
+  border-radius: 999px !important;
+  font-weight: 600;
+}

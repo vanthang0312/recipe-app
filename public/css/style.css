@@ -1,5 +1,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+:root {
+  --primary: #e84e36;
+  --primary-dark: #c53b2a;
+  --secondary: #f4b41a;
+  --surface: #fffdf8;
+  --text: #2f2a2a;
+  --muted: #6b6b6b;
+  --card-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  --card-shadow-hover: 0 22px 48px rgba(0, 0, 0, 0.16);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,15 +19,25 @@
 
 body {
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, #fff1eb 0%, #ffe0b3 100%);
+  background: radial-gradient(circle at 20% 20%, rgba(232, 78, 54, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(244, 180, 26, 0.08), transparent 30%),
+    linear-gradient(135deg, #fffaf5 0%, #ffeede 100%);
   min-height: 100vh;
-  color: #333;
+  color: var(--text);
+}
+
+.page-section {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(4px);
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  padding: 28px;
 }
 
 /* Navbar */
 .nav {
-  background: linear-gradient(to right, #d32f2f, #f44336) !important;
-  box-shadow: 0 4px 20px rgba(244, 67, 54, 0.3);
+  background: linear-gradient(120deg, var(--primary), var(--primary-dark)) !important;
+  box-shadow: 0 6px 24px rgba(232, 78, 54, 0.28);
   padding: 1rem 0;
 }
 
@@ -103,15 +124,16 @@ body {
   border: none;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-shadow);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  background: white;
+  background: var(--surface);
   height: 100%;
+  border: 1px solid rgba(232, 78, 54, 0.06);
 }
 
 .recipe-card:hover {
-  transform: translateY(-15px) scale(1.03);
-  box-shadow: 0 25px 50px rgba(211, 47, 47, 0.25);
+  transform: translateY(-10px);
+  box-shadow: var(--card-shadow-hover);
   z-index: 10;
 }
 
@@ -126,21 +148,21 @@ body {
 }
 
 .recipe-card h5 {
-  color: #d32f2f;
+  color: var(--primary-dark);
   font-weight: 700;
   font-size: 1.35rem;
   margin: 15px 0 8px;
 }
 
 .recipe-card .author {
-  color: #e91e63;
+  color: #e86a7a;
   font-weight: 600;
   font-size: 0.95rem;
   margin-bottom: 10px;
 }
 
 .recipe-card .description {
-  color: #555;
+  color: var(--muted);
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -148,25 +170,42 @@ body {
   overflow: hidden;
 }
 
+.recipe-card__body {
+  background: linear-gradient(180deg, #fff 0%, #fffdf8 100%);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(232, 78, 54, 0.1);
+  color: var(--primary-dark);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 /* Nút chung */
 .btn {
   border-radius: 50px !important;
   font-weight: 600;
   padding: 12px 28px !important;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .btn-danger,
 .btn-outline-danger {
-  background: linear-gradient(45deg, #d32f2f, #f44336);
+  background: linear-gradient(45deg, var(--primary), var(--primary-dark));
   border: none !important;
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
+  box-shadow: 0 5px 16px rgba(232, 78, 54, 0.45);
 }
 
-.btn-danger:hover {
-  background: linear-gradient(45deg, #b71c1c, #d32f2f);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(211, 47, 47, 0.5);
+.btn-danger:hover,
+.btn-outline-danger:hover {
+  background: linear-gradient(45deg, var(--primary-dark), #a9271c);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(232, 78, 54, 0.55);
 }
 
 .btn-success {
@@ -176,7 +215,20 @@ body {
 
 .btn-success:hover {
   background: linear-gradient(45deg, #1b5e20, #2e7d32);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+}
+
+.btn-outline-danger {
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  background: #fff;
+  box-shadow: none;
+}
+
+.btn-outline-danger:hover {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 /* Form chung */
@@ -190,9 +242,21 @@ textarea.form-control {
 
 .form-control:focus,
 textarea.form-control:focus {
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 0.25rem rgba(211, 47, 47, 0.25);
-  transform: scale(1.02);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.25rem rgba(232, 78, 54, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Hero tweaks */
+.hero-title {
+  color: var(--primary-dark);
+  text-shadow: 3px 3px 18px rgba(232, 78, 54, 0.25);
+}
+
+.hero-subtitle {
+  color: var(--muted);
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 /* Add recipe */

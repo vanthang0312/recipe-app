@@ -1,0 +1,67 @@
+<%- include('./partials/header') %>
+
+<div class="admin-hero mb-4">
+  <div>
+    <p class="text-light mb-1">Admin / Quản lý tài khoản</p>
+    <h1 class="text-white fw-bold"><%= mode === 'add' ? 'Thêm tài khoản' : 'Chỉnh sửa tài khoản' %></h1>
+    <p class="text-light mb-0">Nhập thông tin người dùng.</p>
+  </div>
+  <a href="/admin/users" class="btn btn-outline-light btn-sm">
+    <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+  </a>
+</div>
+
+<div class="card border-0 shadow-lg rounded-4">
+  <div class="card-body p-4">
+    <form method="POST" action="<%= mode === 'add' ? '/admin/users/add' : '/admin/users/' + userData.id + '/edit' %>">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Tên đăng nhập</label>
+          <input
+            type="text"
+            name="username"
+            class="form-control"
+            required
+            minlength="3"
+            value="<%= userData.username || '' %>"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Email</label>
+          <input
+            type="email"
+            name="email"
+            class="form-control"
+            required
+            value="<%= userData.email || '' %>"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Mật khẩu <%= mode === 'edit' ? '(để trống nếu không đổi)' : '' %></label>
+          <input
+            type="password"
+            name="password"
+            class="form-control"
+            <%= mode === 'add' ? 'required minlength="6"' : '' %>
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Vai trò</label>
+          <select name="role" class="form-select">
+            <option value="user" <%= userData.role === 'user' ? 'selected' : '' %>>User</option>
+            <option value="admin" <%= userData.role === 'admin' ? 'selected' : '' %>>Admin</option>
+            <option value="banned" <%= userData.role === 'banned' ? 'selected' : '' %>>Banned</option>
+          </select>
+        </div>
+      </div>
+      <div class="text-end mt-4">
+        <a href="/admin/users" class="btn btn-outline-secondary rounded-pill px-4">Hủy</a>
+        <button type="submit" class="btn btn-danger rounded-pill px-4 ms-2">
+          <i class="fas fa-save me-1"></i>Lưu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('./partials/footer') %>

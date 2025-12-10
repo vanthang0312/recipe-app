@@ -6,7 +6,7 @@ const db = require("../config/db");
 const nodemailer = require("nodemailer");
 const { body, validationResult } = require("express-validator");
 
-// Ensure must_change column exists for forced password change
+// Ensure must_change column exists
 const ensureResetColumn = async () => {
   const [cols] = await db.query(
     `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
@@ -20,7 +20,26 @@ const ensureResetColumn = async () => {
   }
 };
 
-// Mail transporter (SMTP via env)
+// Seed admin account from env if not exists
+const ensureAdminSeed = async () => {
+  const adminUser = (process.env.ADMIN_USER || "").trim();
+  const adminPass = process.env.ADMIN_PASS;
+  const adminEmail = process.env.ADMIN_EMAIL || adminUser;
+  if (!adminUser || !adminPass) return;
+  const [rows] = await db.query(
+    "SELECT id FROM users WHERE username = ? OR role = 'admin' LIMIT 1",
+    [adminUser]
+  );
+  if (rows.length > 0) return;
+  const hashed = await bcrypt.hash(adminPass, 12);
+  await db.query(
+    "INSERT INTO users (username, email, password, role, must_change) VALUES (?, ?, ?, 'admin', 1)",
+    [adminUser, adminEmail, hashed]
+  );
+  console.log("Seeded admin account from env ADMIN_USER");
+};
+
+// Mail transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
@@ -33,17 +52,23 @@ const transporter = nodemailer.createTransport({
 
 // ========== LOGIN ==========
 router.get("/login", (req, res) => {
-  if (req.session.user) return res.redirect("/");
+  if (req.session.user) {
+    const role = (req.session.user.role || "").toLowerCase().trim();
+    const envAdmin = (process.env.ADMIN_USER || "").toLowerCase().trim();
+    const isAdmin =
+      role === "admin" ||
+      (envAdmin &&
+        req.session.user.username &&
+        req.session.user.username.toLowerCase().trim() === envAdmin);
+    return res.redirect(isAdmin ? "/admin/dashboard" : "/");
+  }
   res.render("login", { title: "Đăng nhập", old: {} });
 });
 
 router.post(
   "/login",
   [
-    body("username")
-      .trim()
-      .notEmpty()
-      .withMessage("Vui lòng nhập tên đăng nhập hoặc email"),
+    body("username").trim().notEmpty().withMessage("Vui lòng nhập tên đăng nhập hoặc email"),
     body("password").notEmpty().withMessage("Vui lòng nhập mật khẩu"),
   ],
   async (req, res) => {
@@ -62,6 +87,7 @@ router.post(
     const { username, password } = req.body;
 
     try {
+      await ensureAdminSeed();
       await ensureResetColumn();
 
       const [users] = await db.query(
@@ -75,6 +101,16 @@ router.post(
       }
 
       const user = users[0];
+      const envAdmin = (process.env.ADMIN_USER || "").toLowerCase().trim();
+      const isEnvAdmin =
+        envAdmin && user.username && user.username.toLowerCase().trim() === envAdmin;
+
+      // Elevate to admin if username matches ADMIN_USER
+      if (isEnvAdmin && (user.role || "").toLowerCase().trim() !== "admin") {
+        await db.query("UPDATE users SET role = 'admin' WHERE id = ?", [user.id]);
+        user.role = "admin";
+      }
+
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
         req.flash("error_msg", "Mật khẩu không chính xác");
@@ -102,8 +138,11 @@ router.post(
           );
           return res.redirect("/profile/edit");
         }
+        const isAdmin =
+          (user.role && user.role.toLowerCase().trim() === "admin") || isEnvAdmin;
+        const target = isAdmin ? "/admin/dashboard" : "/";
         req.flash("success_msg", `Chào mừng trở lại, ${user.username}!`);
-        res.redirect("/");
+        res.redirect(target);
       });
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
@@ -129,9 +168,7 @@ router.post(
       .matches(/^[a-zA-Z0-9_]+$/)
       .withMessage("Chỉ dùng chữ, số và dấu gạch dưới"),
     body("email").isEmail().normalizeEmail().withMessage("Email không hợp lệ"),
-    body("password")
-      .isLength({ min: 6 })
-      .withMessage("Mật khẩu ít nhất 6 ký tự"),
+    body("password").isLength({ min: 6 }).withMessage("Mật khẩu ít nhất 6 ký tự"),
     body("confirm_password")
       .custom((value, { req }) => value === req.body.password)
       .withMessage("Mật khẩu xác nhận không khớp"),
@@ -205,7 +242,7 @@ router.post(
       await ensureResetColumn();
 
       const [users] = await db.query(
-        "SELECT id, email, username FROM users WHERE username = ? LIMIT 1",
+        "SELECT id, email, username, role FROM users WHERE username = ? LIMIT 1",
         [username]
       );
       if (users.length === 0) {
@@ -214,10 +251,7 @@ router.post(
       }
       const user = users[0];
       if (!user.email) {
-        req.flash(
-          "error_msg",
-          "Tài khoản chưa có email, không thể gửi mật khẩu tạm."
-        );
+        req.flash("error_msg", "Tài khoản chưa có email, không thể gửi mật khẩu tạm.");
         return res.redirect("/forgot");
       }
 
@@ -236,7 +270,6 @@ router.post(
         text: `Xin chào ${user.username},\n\nMật khẩu tạm của bạn: ${tempPass}\nVui lòng đăng nhập và đổi mật khẩu ngay để bảo mật tài khoản.\n\nRecipe App`,
       });
 
-      // Đăng nhập tạm và buộc đổi mật khẩu ngay
       req.session.user = {
         id: user.id,
         username: user.username,

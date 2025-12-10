@@ -1,0 +1,91 @@
+<%- include('./partials/header') %>
+
+<div class="container py-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h1 class="fw-bold text-danger mb-1">Kiểm duyệt bài đăng</h1>
+      <p class="text-light mb-0">Xem, tìm kiếm, phê duyệt hoặc từ chối các bài chờ duyệt.</p>
+    </div>
+    <form class="d-flex flex-wrap gap-2" method="GET" action="/admin/review">
+      <input
+        type="text"
+        name="search"
+        class="form-control admin-search"
+        placeholder="Tìm bài (tiêu đề/mô tả)"
+        value="<%= filters.search || '' %>"
+      />
+      <select name="status" class="form-select admin-select">
+        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Chờ duyệt</option>
+        <option value="approved" <%= filters.status === 'approved' ? 'selected' : '' %>>Đã duyệt</option>
+        <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Đã từ chối</option>
+        <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>Tất cả</option>
+      </select>
+      <button class="btn btn-danger px-4" type="submit">
+        <i class="fas fa-search me-2"></i>Lọc
+      </button>
+    </form>
+  </div>
+
+  <% if (!recipes || recipes.length === 0) { %>
+  <div class="text-center py-5 bg-light rounded-4 shadow-sm">
+    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+    <p class="text-muted mb-0">Không có bài viết nào trong danh sách này.</p>
+  </div>
+  <% } else { %>
+  <div class="row g-4">
+    <% recipes.forEach((r) => { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card admin-card h-100 shadow-sm border-0">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="badge bg-light text-dark border"><%= r.username || 'Ẩn danh' %></span>
+            <span class="badge status-<%= r.status %> text-uppercase"><%= r.status %></span>
+          </div>
+          <h5 class="fw-bold text-dark"><%= r.title %></h5>
+          <p class="text-muted small mb-3">
+            Đăng: <%= new Date(r.created_at).toLocaleString('vi-VN') %>
+          </p>
+          <p class="text-muted flex-grow-1 admin-desc">
+            <%= r.description || 'Không có mô tả' %>
+          </p>
+          <div class="d-flex gap-2 flex-wrap mt-3">
+            <a href="/recipes/<%= r.id %>" class="btn btn-light btn-sm rounded-pill px-3">
+              <i class="fas fa-eye me-1"></i>Xem chi tiết
+            </a>
+            <form method="POST" action="/admin/review/<%= r.id %>/approve" class="d-inline">
+              <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                <i class="fas fa-check me-1"></i>Phê duyệt
+              </button>
+            </form>
+            <form method="POST" action="/admin/review/<%= r.id %>/reject" class="d-inline">
+              <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3">
+                <i class="fas fa-times me-1"></i>Từ chối
+              </button>
+            </form>
+            <form method="POST" action="/admin/review/<%= r.id %>/delete" class="d-inline" onsubmit="return confirm('Xóa bài này?');">
+              <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                <i class="fas fa-trash me-1"></i>Xóa vi phạm
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<style>
+  .admin-card .admin-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .status-pending { background: #fff3cd; color: #8a6d1a; }
+  .status-approved { background: #d1e7dd; color: #0f5132; }
+  .status-rejected { background: #f8d7da; color: #842029; }
+</style>
+
+<%- include('./partials/footer') %>
