@@ -1,0 +1,328 @@
+<%- include('partials/header') %>
+
+<style>
+  .rating-highlight {
+    color: #d32f2f;
+    font-weight: 700;
+  }
+</style>
+
+<div class="container py-5 mt-5 detail">
+  <div class="row g-5">
+    <div class="col-lg-8">
+      <h1 class="display-5 fw-bold text-danger mb-3"><%= recipe.title %></h1>
+      <p class="meta mb-4">
+        <i class="fas fa-user-circle text-danger"></i>
+        Bởi <strong><%= recipe.username || 'Ẩn danh' %></strong> •
+        <%= new Date(recipe.created_at).toLocaleDateString('vi-VN') %>
+      </p>
+
+      <% if (recipe.description) { %>
+      <div class="p-4 rounded-4 mb-5 shadow-sm hero-card">
+        <p class="lead text-dark mb-0"><%= recipe.description %></p>
+      </div>
+      <% } %>
+
+      <% if (recipe.video && recipe.video.trim()) { %>
+      <div class="ratio ratio-16x9 mb-5 rounded-4 overflow-hidden shadow-lg border border-danger">
+        <% let videoUrl = recipe.video.trim();
+          if (videoUrl.includes('youtu.be')) {
+            videoUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+          } else if (videoUrl.includes('youtube.com/watch?v=')) {
+            videoUrl = videoUrl.replace('watch?v=', 'embed/').split('&')[0];
+          } else if (videoUrl.includes('vimeo.com')) {
+            const id = videoUrl.split('/').pop().split('?')[0];
+            videoUrl = `https://player.vimeo.com/video/${id}`;
+          }
+        %>
+        <iframe
+          src="<%= videoUrl %>?autoplay=0&rel=0"
+          class="border-0 rounded-4"
+          allowfullscreen
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          loading="lazy"
+        ></iframe>
+      </div>
+      <% } else { %>
+      <% const imageSrc = recipe.image
+          ? (recipe.image.startsWith('http') ? recipe.image : '/' + recipe.image.replace(/^\/+/, ''))
+          : `https://source.unsplash.com/800x600/?vietnamese-food,${encodeURIComponent(recipe.title)}`;
+      %>
+      <img
+        src="<%= imageSrc %>"
+        alt="<%= recipe.title %>"
+        class="img-fluid rounded-4 shadow-lg mb-5 w-100"
+        style="max-height: 500px; object-fit: cover"
+        onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80'"
+      />
+      <% } %>
+
+      <div class="section-title">
+        <i class="fas fa-list-ul"></i>
+        <span>Nguyên liệu</span>
+      </div>
+      <ul class="list-group list-group-flush mb-5">
+        <% recipe.ingredients.split('\n').map(l => l.trim()).filter(Boolean).forEach(item => { %>
+        <li class="list-group-item py-3 border-bottom">
+          <i class="fas fa-check text-success me-3"></i><%= item %>
+        </li>
+        <% }) %>
+      </ul>
+
+      <div class="section-title">
+        <i class="fas fa-book-open"></i>
+        <span>Hướng dẫn thực hiện</span>
+      </div>
+      <ul class="list-group mb-5">
+        <% recipe.instructions.split('\n').map(l => l.trim()).filter(Boolean).forEach((step, i) => { %>
+        <li class="list-group-item py-4 border-bottom">
+          <div class="d-flex">
+            <div
+              class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-4"
+              style="width: 40px; height: 40px"
+            >
+              <%= i + 1 %>
+            </div>
+            <p class="mb-0 lead"><%= step %></p>
+          </div>
+        </li>
+        <% }) %>
+      </ul>
+
+      <div class="mt-5 pt-5 border-top">
+        <h3 class="fw-bold text-danger mb-4">
+          <i class="fas fa-comments me-2"></i>Bình luận từ cộng đồng
+        </h3>
+        <div id="comments-list" class="mb-5">
+          <div class="text-center py-5">
+            <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
+            <p class="mt-3 text-muted">Đang tải bình luận...</p>
+          </div>
+        </div>
+
+        <% if (user) { %>
+        <div class="card border-0 shadow-sm p-4 comment-card">
+          <div class="d-flex gap-3">
+            <img
+              src="https://ui-avatars.com/api/?name=<%= encodeURIComponent(user.username) %>&background=d32f2f&color=fff&bold=true&rounded=true"
+              class="rounded-circle flex-shrink-0"
+              width="50"
+              height="50"
+            />
+            <form id="comment-form" class="flex-grow-1">
+              <textarea
+                name="content"
+                class="form-control rounded-3 mb-3"
+                rows="3"
+                placeholder="Chia sẻ cảm nhận của bạn..."
+                required
+                minlength="5"
+              ></textarea>
+              <button
+                type="submit"
+                class="btn btn-danger rounded-pill px-4 shadow-sm"
+              >
+                <i class="fas fa-paper-plane me-2"></i>Gửi bình luận
+              </button>
+            </form>
+          </div>
+        </div>
+        <% } else { %>
+        <div class="text-center py-4 bg-light rounded-4">
+          <a href="/login" class="btn btn-outline-danger rounded-pill px-5">
+            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để bình luận
+          </a>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="sticky-top" style="top: 100px">
+        <div class="card border-0 shadow-lg rounded-4 mb-4">
+          <div class="card-body text-center p-4">
+            <% if (user) { %>
+            <form
+              method="POST"
+              action="/recipes/<%= recipe.id %>/<%= isFavorited ? 'unfavorite' : 'favorite' %>"
+            >
+              <button
+                type="submit"
+                class="btn btn-lg w-100 <%= isFavorited ? 'btn-outline-danger' : 'btn-danger' %> rounded-pill shadow"
+              >
+                <i class="fas fa-heart<%= isFavorited ? '' : '-regular' %> me-2"></i>
+                <%= isFavorited ? 'Đã yêu thích' : 'Yêu thích món này' %>
+              </button>
+            </form>
+            <% } else { %>
+            <a
+              href="/login"
+              class="btn btn-outline-danger btn-lg w-100 rounded-pill"
+            >
+              <i class="fas fa-heart me-2"></i>Đăng nhập để yêu thích
+            </a>
+            <% } %>
+            <a
+              href="/"
+              class="btn btn-secondary btn-lg w-100 rounded-pill mt-3"
+            >
+              <i class="fas fa-arrow-left me-2"></i>Quay lại trang chủ
+            </a>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-lg rounded-4 rating-box">
+          <div class="card-body text-center p-4">
+            <h5 class="fw-bold text-danger mb-3">
+              <i class="fas fa-star me-2"></i>Đánh giá món ăn
+            </h5>
+            <div class="star-rating mb-3">
+              <i class="fas fa-star star" data-rating="1"></i>
+              <i class="fas fa-star star" data-rating="2"></i>
+              <i class="fas fa-star star" data-rating="3"></i>
+              <i class="fas fa-star star" data-rating="4"></i>
+              <i class="fas fa-star star" data-rating="5"></i>
+            </div>
+            <p class="text-muted small mb-3" id="rating-text">Đang tải...</p>
+
+            <% if (user) { %>
+            <form id="rating-form">
+              <button
+                type="submit"
+                class="btn btn-warning w-100 rounded-pill shadow-sm"
+              >
+                <i class="fas fa-star me-2"></i>Gửi đánh giá
+              </button>
+            </form>
+            <% } else { %>
+            <a href="/login" class="btn btn-outline-warning w-100 rounded-pill">
+              <i class="fas fa-star me-2"></i>Đăng nhập để đánh giá
+            </a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentRating = 0;
+  const recipeId = "<%= recipe.id %>";
+
+  async function loadComments() {
+    try {
+      const res = await fetch(`/recipes/${recipeId}/rating-comments`);
+      if (!res.ok) throw new Error("Lỗi server");
+      const data = await res.json();
+
+      const avg = data.avgRating ? Number(data.avgRating).toFixed(1) : 0;
+      const total = data.totalRatings || 0;
+      const ratingText = document.getElementById("rating-text");
+      ratingText.classList.remove("rating-highlight");
+
+      if (total > 0) {
+        const highlightBadge =
+          avg >= 4
+            ? '<span class="badge bg-success ms-2">Nổi bật</span>'
+            : "";
+        ratingText.innerHTML = `
+          <strong class="fs-4 text-warning">${avg}/5</strong>
+          ${highlightBadge}
+          <br><small class="text-muted">(${total} đánh giá)</small>`;
+        if (avg >= 4) ratingText.classList.add("rating-highlight");
+      } else {
+        ratingText.innerHTML = '<span class="text-muted">Chưa có đánh giá nào</span>';
+      }
+
+      currentRating = data.userRating || 0;
+      document.querySelectorAll(".star").forEach((s, i) => {
+        s.classList.toggle("text-warning", i < currentRating);
+      });
+
+      const list = document.getElementById("comments-list");
+      if (!data.comments || data.comments.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-5 bg-light rounded-4">
+            <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nhận!</p>
+          </div>`;
+      } else {
+        list.innerHTML = data.comments
+          .map(
+            (c) => `
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+              <div class="d-flex gap-3">
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  c.user_name || "User"
+                )}&background=d32f2f&color=fff&bold=true&rounded=true" 
+                     class="rounded-circle flex-shrink-0" width="50" height="50">
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong class="text-danger">${c.user_name || "Ẩn danh"}</strong>
+                    <small class="text-muted">${new Date(
+                      c.created_at
+                    ).toLocaleString("vi-VN")}</small>
+                  </div>
+                  <p class="mb-0 text-dark">${c.content.replace(/\n/g, "<br>")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      }
+    } catch (err) {
+      console.error("Lỗi load bình luận:", err);
+      document.getElementById("comments-list").innerHTML =
+        '<p class="text-danger text-center">Không thể tải bình luận</p>';
+    }
+  }
+
+  document.querySelectorAll(".star").forEach((star) => {
+    star.style.cursor = "pointer";
+    star.addEventListener("click", () => {
+      currentRating = parseInt(star.dataset.rating);
+      document.querySelectorAll(".star").forEach((s, i) => {
+        s.classList.toggle("text-warning", i < currentRating);
+      });
+    });
+  });
+
+  document.getElementById("rating-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (currentRating === 0) return alert("Vui lòng chọn số sao!");
+    const res = await fetch(`/recipes/${recipeId}/rating`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating: currentRating }),
+    });
+    if (res.ok) {
+      loadComments();
+      alert("Cảm ơn bạn đã đánh giá!");
+    }
+  });
+
+  document.getElementById("comment-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const content = e.target.content.value.trim();
+    if (content.length < 5) return alert("Bình luận ít nhất 5 ký tự!");
+    const res = await fetch(`/recipes/${recipeId}/comment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    if (res.ok) {
+      e.target.reset();
+      loadComments();
+      alert("Bình luận thành công!");
+    }
+  });
+
+  loadComments();
+</script>
+
+<%- include('partials/footer') %>
+

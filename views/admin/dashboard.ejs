@@ -1,0 +1,60 @@
+<div class="container-fluid mt-4">
+  <h1 class="mb-4 text-danger"><strong>Admin Dashboard</strong></h1>
+
+  <!-- Thống kê nhanh -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5>Tổng công thức</h5>
+          <h2><%= stats.total_recipes %></h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5>Tổng người dùng</h5>
+          <h2><%= stats.total_users %></h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Danh sách công thức gần đây</h3>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Tiêu đề</th>
+          <th>Tác giả</th>
+          <th>Ngày tạo</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recipes.forEach(r => { %>
+        <tr>
+          <td><%= r.id %></td>
+          <td><a href="/recipes/<%= r.id %>"><%= r.title %></a></td>
+          <td><%= r.username || 'Không rõ' %></td>
+          <td><%= new Date(r.created_at).toLocaleDateString('vi-VN') %></td>
+          <td>
+            <form
+              method="POST"
+              action="/admin/recipe/delete/<%= r.id %>"
+              style="display: inline"
+              onsubmit="return confirm('Xóa món này vĩnh viễn?')"
+            >
+              <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,178 @@
+<%- include('partials/header') %>
+
+<%
+  const normalizeImg = (url, fallback) => {
+    if (!url) return fallback;
+    if (url.startsWith("http")) return url;
+    return url.startsWith("/") ? url : "/" + url;
+  };
+
+  const coverUrl = normalizeImg(
+    user.cover,
+    "https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=1400&q=80"
+  );
+
+  const avatarUrl = normalizeImg(
+    user.avatar,
+    "https://ui-avatars.com/api/?name=" +
+      encodeURIComponent(user.username || "User") +
+      "&background=d32f2f&color=fff&bold=true"
+  );
+%>
+
+<div class="container py-5 min-vh-100">
+  <div class="row justify-content-center">
+    <div class="col-xl-10">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 position-relative">
+        <div class="profile-cover" style="background-image: url('<%= coverUrl %>')">
+          <div class="cover-overlay"></div>
+        </div>
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex flex-column flex-md-row align-items-md-end">
+            <div class="me-md-4 text-center text-md-start">
+              <img
+                src="<%= avatarUrl %>"
+                alt="Avatar"
+                class="rounded-circle border border-3 border-white shadow-lg profile-avatar"
+              />
+            </div>
+            <div class="flex-grow-1 mt-3 mt-md-0">
+              <h1 class="fw-bold mb-1"><%= user.username %></h1>
+              <p class="text-muted mb-2">Thành viên Recipe App</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="badge bg-<%= user.role === 'admin' ? 'danger' : 'success' %>">
+                  <%= user.role === 'admin' ? 'Quản trị viên' : 'Thành viên' %>
+                </span>
+                <span class="badge bg-light text-dark border">
+                  Đã tham gia: <%= new Date().toLocaleDateString('vi-VN') %>
+                </span>
+                <span class="badge bg-light text-dark border">
+                  Món đã chia sẻ: <%= recipes?.length || 0 %>
+                </span>
+              </div>
+            </div>
+            <div class="ms-md-3 mt-3 mt-md-0 d-flex gap-2 flex-wrap">
+              <a href="/recipes/add" class="btn btn-danger rounded-pill px-4">
+                <i class="fas fa-plus me-2"></i>Thêm món
+              </a>
+              <a href="/favorites" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-heart me-2"></i>Món yêu thích
+              </a>
+              <a href="/profile/edit" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="fas fa-user-gear me-2"></i>Thay đổi thông tin
+              </a>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <div class="row g-4">
+            <div class="col-lg-12">
+              <h4 class="text-danger fw-bold mb-3">
+                <i class="fas fa-user me-2"></i>Thông tin cá nhân
+              </h4>
+              <table class="table table-borderless mb-0">
+                <tr>
+                  <td class="fw-semibold text-muted">Tên đăng nhập</td>
+                  <td class="fw-bold text-dark"><%= user.username %></td>
+                </tr>
+                <tr>
+                  <td class="fw-semibold text-muted">Email</td>
+                  <td class="fw-bold text-dark"><%= user.email || 'Chưa cập nhật' %></td>
+                </tr>
+                <tr>
+                  <td class="fw-semibold text-muted">Vai trò</td>
+                  <td>
+                    <span class="badge bg-<%= user.role === 'admin' ? 'danger' : 'success' %>">
+                      <%= user.role === 'admin' ? 'Quản trị viên' : 'Thành viên' %>
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-lg rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h4 class="fw-bold text-danger mb-1">Món bạn đã chia sẻ</h4>
+              <p class="text-muted mb-0">Quản lý các công thức của bạn.</p>
+            </div>
+            <a href="/recipes/add" class="btn btn-outline-danger rounded-pill px-4">
+              <i class="fas fa-plus me-2"></i>Thêm món mới
+            </a>
+          </div>
+
+          <% if (recipes && recipes.length > 0) { %>
+          <div class="row g-4">
+            <% recipes.forEach((r) => { 
+              const imageSrc = r.image
+                ? (r.image.startsWith('http') ? r.image : '/' + r.image.replace(/^\/+/, ''))
+                : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80';
+            %>
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-100 shadow-sm border-0">
+                <div class="ratio ratio-4x3 overflow-hidden">
+                  <img src="<%= imageSrc %>" class="w-100 h-100 object-fit-cover" alt="<%= r.title %>" />
+                </div>
+                <div class="card-body d-flex flex-column">
+                  <h5 class="fw-bold mb-2 text-dark"><%= r.title %></h5>
+                  <p class="text-muted small mb-3">
+                    Đăng ngày: <%= new Date(r.created_at).toLocaleDateString('vi-VN') %>
+                  </p>
+                  <div class="mt-auto d-flex gap-2">
+                    <a href="/recipes/<%= r.id %>" class="btn btn-light btn-sm rounded-pill px-3">
+                      <i class="fas fa-eye me-1"></i>Xem
+                    </a>
+                    <a href="/recipes/<%= r.id %>/edit" class="btn btn-warning btn-sm rounded-pill px-3">
+                      <i class="fas fa-edit me-1"></i>Sửa
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+          <% } else { %>
+          <div class="text-center py-5">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <p class="text-muted mb-3">Bạn chưa chia sẻ món nào.</p>
+            <a href="/recipes/add" class="btn btn-danger rounded-pill px-4">
+              <i class="fas fa-plus me-2"></i>Chia sẻ món đầu tiên
+            </a>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .profile-cover {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55));
+  }
+  .profile-avatar {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    margin-top: -90px;
+    background: #fff;
+  }
+  .table td {
+    padding: 0.6rem 0;
+  }
+</style>
+
+<%- include('partials/footer') %>
