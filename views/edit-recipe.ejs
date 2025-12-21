@@ -1,0 +1,189 @@
+<%- include('partials/header') %>
+
+<div class="container py-5 min-vh-100 add">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 add__hero text-center mb-5">
+      <p class="text-uppercase fw-bold small text-danger add__eyebrow">
+        <i class="fas fa-pen me-2"></i>Chỉnh sửa món của bạn
+      </p>
+      <h1 class="display-4 fw-bold add__title">Cập nhật công thức</h1>
+      <p class="lead text-muted col-lg-8 mx-auto add__subtitle">
+        Kiểm tra lại nguyên liệu, bước làm và hình ảnh để mọi người dễ theo dõi nhất.
+      </p>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+      <div class="card shadow-lg border-0 rounded-4 overflow-hidden add__form-card">
+        <div class="card-body p-5 add__form-body">
+          <% if (typeof error_msg !== 'undefined' && error_msg) { %>
+          <div class="alert alert-danger rounded-4 d-flex align-items-center mb-4">
+            <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+            <div><%= error_msg %></div>
+          </div>
+          <% } %>
+          <% if (typeof success_msg !== 'undefined' && success_msg) { %>
+          <div class="alert alert-success rounded-4 d-flex align-items-center mb-4">
+            <i class="fas fa-check-circle me-3 fs-4"></i>
+            <div><%= success_msg %></div>
+          </div>
+          <% } %>
+
+          <form
+            id="edit__form"
+            method="POST"
+            action="/recipes/<%= recipe.id %>/edit"
+            enctype="multipart/form-data"
+            novalidate
+          >
+            <input type="hidden" name="oldImage" value="<%= recipe.image || '' %>" />
+
+            <!-- Ảnh món -->
+            <div class="mb-5 add__field">
+              <label class="form-label fw-bold text-danger fs-5 add__label">
+                <i class="fas fa-camera"></i> Ảnh món (tùy chọn đổi)
+              </label>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="upload-dropzone" id="upload-dropzone">
+                    <input
+                      id="upload-dropzone__input"
+                      type="file"
+                      name="recipeImage"
+                      accept="image/*"
+                      class="upload-dropzone__input"
+                    />
+                    <div id="upload-dropzone__preview" class="text-center">
+                      <i class="fas fa-cloud-upload-alt text-danger upload-dropzone__icon"></i>
+                      <p class="fw-bold text-danger fs-5 mb-1">Chọn ảnh mới (nếu cần)</p>
+                      <small class="text-muted d-block">JPG, PNG, WebP tối đa 5MB</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6 text-center">
+                  <p class="text-muted mb-2">Ảnh hiện tại:</p>
+                  <img
+                    src="<%= recipe.image ? (recipe.image.startsWith('http') ? recipe.image : '/' + recipe.image.replace(/^\/+/, '')) : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80' %>"
+                    alt="<%= recipe.title %>"
+                    class="img-fluid rounded-3 shadow-sm"
+                    style="max-height: 220px; object-fit: cover;"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Tiêu đề -->
+            <div class="mb-4 add__field">
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="edit__title">
+                Tiêu đề món
+              </label>
+              <input
+                id="edit__title"
+                type="text"
+                name="title"
+                class="form-control form-control-lg rounded-pill shadow-sm"
+                placeholder="VD: Phở bò Hà Nội truyền thống"
+                required
+                value="<%= recipe.title %>"
+              />
+            </div>
+
+            <!-- Mô tả -->
+            <div class="mb-4 add__field">
+              <label class="form-label fw-bold text-danger add__label" for="edit__description">
+                Mô tả ngắn (tùy chọn)
+              </label>
+              <textarea
+                id="edit__description"
+                name="description"
+                class="form-control rounded-3"
+                rows="3"
+                placeholder="Tóm tắt hương vị, nguồn gốc, lưu ý..."
+              ><%= recipe.description || '' %></textarea>
+            </div>
+
+            <!-- Video -->
+            <div class="mb-5 add__field">
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="edit__video">
+                <i class="fas fa-video me-2"></i>Video hướng dẫn (YouTube/Vimeo) - tùy chọn
+              </label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-danger text-white">
+                  <i class="fab fa-youtube"></i>
+                </span>
+                <input
+                  id="edit__video"
+                  type="url"
+                  name="video"
+                  class="form-control rounded-end shadow-sm"
+                  placeholder="https://www.youtube.com/watch?v=abc123"
+                  value="<%= recipe.video || '' %>"
+                />
+              </div>
+              <div class="form-text mt-2">
+                Dán link YouTube/Vimeo hoặc để trống nếu không dùng video.
+              </div>
+            </div>
+
+            <!-- Nguyên liệu -->
+            <div class="mb-4 add__field">
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="edit__ingredients">
+                Nguyên liệu (mỗi dòng một thành phần)
+              </label>
+              <textarea
+                id="edit__ingredients"
+                name="ingredients"
+                class="form-control rounded-3"
+                rows="8"
+                required
+              ><%= recipe.ingredients %></textarea>
+            </div>
+
+            <!-- Cách làm -->
+            <div class="mb-5 add__field">
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="edit__steps">
+                Cách làm (mỗi dòng một bước)
+              </label>
+              <textarea
+                id="edit__steps"
+                name="instructions"
+                class="form-control rounded-3"
+                rows="12"
+                required
+              ><%= recipe.instructions %></textarea>
+            </div>
+
+            <div class="text-center add__actions d-flex flex-wrap justify-content-center gap-3">
+              <a href="/recipes/<%= recipe.id %>" class="btn btn-outline-danger btn-lg px-5 rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+              </a>
+              <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill shadow-lg fw-bold py-3 add__submit">
+                <i class="fas fa-save me-3"></i>Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const imageInput = document.getElementById("upload-dropzone__input");
+  const previewEl = document.getElementById("upload-dropzone__preview");
+
+  imageInput?.addEventListener("change", (e) => {
+    if (e.target.files.length > 0) {
+      const fileName = e.target.files[0].name;
+      previewEl.innerHTML = `
+        <i class="fas fa-check-circle text-success mb-3" style="font-size: 3.5rem;"></i>
+        <p class="fw-bold text-success fs-5 mb-1">Đã chọn ảnh mới</p>
+        <p class="text-muted mb-0">${fileName}</p>
+        <small class="text-muted">Click lại khu vực này để thay ảnh</small>
+      `;
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

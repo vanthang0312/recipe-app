@@ -1,16 +1,29 @@
 <%- include('partials/header') %>
 
 <style>
-  .rating-highlight {
-    color: #d32f2f;
-    font-weight: 700;
-  }
+  .rating-highlight { color: #d32f2f; font-weight: 700; }
 </style>
 
 <div class="container py-5 mt-5 detail">
   <div class="row g-5">
     <div class="col-lg-8">
-      <h1 class="display-5 fw-bold text-danger mb-3"><%= recipe.title %></h1>
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <h1 class="display-5 fw-bold text-danger mb-0"><%= recipe.title %></h1>
+        <% if (isAdmin || isOwner) { %>
+        <div class="d-flex gap-2">
+          <% if (isOwner) { %>
+          <a href="/recipes/<%= recipe.id %>/edit" class="btn btn-outline-danger rounded-pill">
+            <i class="fas fa-pen me-2"></i>Sửa món
+          </a>
+          <% } %>
+          <% if (isAdmin && !isOwner) { %>
+          <a href="/admin/posts/<%= recipe.id %>/edit" class="btn btn-outline-danger rounded-pill">
+            <i class="fas fa-pen me-2"></i>Sửa (Admin)
+          </a>
+          <% } %>
+        </div>
+        <% } %>
+      </div>
       <p class="meta mb-4">
         <i class="fas fa-user-circle text-danger"></i>
         Bởi <strong><%= recipe.username || 'Ẩn danh' %></strong> •
@@ -46,8 +59,7 @@
       <% } else { %>
       <% const imageSrc = recipe.image
           ? (recipe.image.startsWith('http') ? recipe.image : '/' + recipe.image.replace(/^\/+/, ''))
-          : `https://source.unsplash.com/800x600/?vietnamese-food,${encodeURIComponent(recipe.title)}`;
-      %>
+          : `https://source.unsplash.com/800x600/?vietnamese-food,${encodeURIComponent(recipe.title)}`; %>
       <img
         src="<%= imageSrc %>"
         alt="<%= recipe.title %>"
@@ -57,16 +69,22 @@
       />
       <% } %>
 
+      <% const ingredientsList = (recipe.ingredients || '').split('\n').map(l => l.trim()).filter(Boolean); %>
+      <% const instructionsList = (recipe.instructions || '').split('\n').map(l => l.trim()).filter(Boolean); %>
+
       <div class="section-title">
         <i class="fas fa-list-ul"></i>
         <span>Nguyên liệu</span>
       </div>
       <ul class="list-group list-group-flush mb-5">
-        <% recipe.ingredients.split('\n').map(l => l.trim()).filter(Boolean).forEach(item => { %>
+        <% ingredientsList.forEach(item => { %>
         <li class="list-group-item py-3 border-bottom">
           <i class="fas fa-check text-success me-3"></i><%= item %>
         </li>
         <% }) %>
+        <% if (ingredientsList.length === 0) { %>
+        <li class="list-group-item text-muted">Chưa có nguyên liệu.</li>
+        <% } %>
       </ul>
 
       <div class="section-title">
@@ -74,7 +92,7 @@
         <span>Hướng dẫn thực hiện</span>
       </div>
       <ul class="list-group mb-5">
-        <% recipe.instructions.split('\n').map(l => l.trim()).filter(Boolean).forEach((step, i) => { %>
+        <% instructionsList.forEach((step, i) => { %>
         <li class="list-group-item py-4 border-bottom">
           <div class="d-flex">
             <div
@@ -87,6 +105,9 @@
           </div>
         </li>
         <% }) %>
+        <% if (instructionsList.length === 0) { %>
+        <li class="list-group-item text-muted">Chưa có hướng dẫn.</li>
+        <% } %>
       </ul>
 
       <div class="mt-5 pt-5 border-top">
@@ -118,10 +139,7 @@
                 required
                 minlength="5"
               ></textarea>
-              <button
-                type="submit"
-                class="btn btn-danger rounded-pill px-4 shadow-sm"
-              >
+              <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
                 <i class="fas fa-paper-plane me-2"></i>Gửi bình luận
               </button>
             </form>
@@ -155,17 +173,11 @@
               </button>
             </form>
             <% } else { %>
-            <a
-              href="/login"
-              class="btn btn-outline-danger btn-lg w-100 rounded-pill"
-            >
+            <a href="/login" class="btn btn-outline-danger btn-lg w-100 rounded-pill">
               <i class="fas fa-heart me-2"></i>Đăng nhập để yêu thích
             </a>
             <% } %>
-            <a
-              href="/"
-              class="btn btn-secondary btn-lg w-100 rounded-pill mt-3"
-            >
+            <a href="/" class="btn btn-secondary btn-lg w-100 rounded-pill mt-3">
               <i class="fas fa-arrow-left me-2"></i>Quay lại trang chủ
             </a>
           </div>
@@ -187,10 +199,7 @@
 
             <% if (user) { %>
             <form id="rating-form">
-              <button
-                type="submit"
-                class="btn btn-warning w-100 rounded-pill shadow-sm"
-              >
+              <button type="submit" class="btn btn-warning w-100 rounded-pill shadow-sm">
                 <i class="fas fa-star me-2"></i>Gửi đánh giá
               </button>
             </form>
@@ -209,6 +218,7 @@
 <script>
   let currentRating = 0;
   const recipeId = "<%= recipe.id %>";
+  const isAdmin = <%= typeof isAdmin !== 'undefined' && isAdmin ? 'true' : 'false' %>;
 
   async function loadComments() {
     try {
@@ -222,10 +232,9 @@
       ratingText.classList.remove("rating-highlight");
 
       if (total > 0) {
-        const highlightBadge =
-          avg >= 4
-            ? '<span class="badge bg-success ms-2">Nổi bật</span>'
-            : "";
+        const highlightBadge = avg >= 4
+          ? '<span class="badge bg-success ms-2">Nổi bật</span>'
+          : "";
         ratingText.innerHTML = `
           <strong class="fs-4 text-warning">${avg}/5</strong>
           ${highlightBadge}
@@ -261,11 +270,17 @@
                 <div class="flex-grow-1">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <strong class="text-danger">${c.user_name || "Ẩn danh"}</strong>
-                    <small class="text-muted">${new Date(
-                      c.created_at
-                    ).toLocaleString("vi-VN")}</small>
+                    <small class="text-muted">${new Date(c.created_at).toLocaleString("vi-VN")}</small>
                   </div>
-                  <p class="mb-0 text-dark">${c.content.replace(/\n/g, "<br>")}</p>
+                  <p class="mb-0 text-dark">${c.content.replace(/\\n/g, "<br>")}</p>
+                  ${isAdmin ? `
+                  <div class="text-end mt-3">
+                    <form method="POST" action="/admin/comments/${c.id}/delete" onsubmit="return confirm('Xóa bình luận này?');">
+                      <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3">
+                        <i class="fas fa-trash me-1"></i>Xóa
+                      </button>
+                    </form>
+                  </div>` : ``}
                 </div>
               </div>
             </div>
@@ -325,4 +340,3 @@
 </script>
 
 <%- include('partials/footer') %>
-

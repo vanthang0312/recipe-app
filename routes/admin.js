@@ -90,6 +90,92 @@ router.get("/analytics", requireAdmin, async (req, res) => {
   }
 });
 
+// Posts management (recipes) + comments overview
+router.get("/posts", requireAdmin, async (req, res) => {
+  try {
+    await ensureStatusColumn();
+    const [posts] = await db.query(
+      `SELECT r.id, r.title, r.status, r.created_at, u.username
+       FROM recipes r
+       LEFT JOIN users u ON r.user_id = u.id
+       ORDER BY r.created_at DESC
+       LIMIT 200`
+    );
+
+    const [comments] = await db.query(
+      `SELECT c.id, c.content, c.created_at, u.username AS user_name, r.title AS recipe_title, r.id AS recipe_id
+       FROM comments c
+       LEFT JOIN users u ON c.user_id = u.id
+       LEFT JOIN recipes r ON c.recipe_id = r.id
+       ORDER BY c.created_at DESC
+       LIMIT 200`
+    );
+
+    res.render("admin/posts", {
+      title: "Quản lý bài viết",
+      posts,
+      comments,
+    });
+  } catch (err) {
+    console.error("Lỗi tải danh sách bài:", err);
+    req.flash("error_msg", "Không tải được danh sách bài.");
+    res.redirect("/admin/dashboard");
+  }
+});
+
+router.get("/posts/:id/edit", requireAdmin, async (req, res) => {
+  req.flash("error_msg", "Admin chỉ được xem và xóa bài viết.");
+  res.redirect("/admin/posts");
+});
+
+router.post("/posts/:id/edit", requireAdmin, async (req, res) => {
+  req.flash("error_msg", "Admin chỉ được xem và xóa bài viết.");
+  res.redirect("/admin/posts");
+});
+
+router.post("/posts/:id/delete", requireAdmin, async (req, res) => {
+  const recipeId = parseInt(req.params.id);
+  if (isNaN(recipeId)) {
+    req.flash("error_msg", "ID bài không hợp lệ!");
+    return res.redirect("/admin/posts");
+  }
+  try {
+    const [[recipe]] = await db.query("SELECT image FROM recipes WHERE id = ?", [
+      recipeId,
+    ]);
+    await db.query("DELETE FROM favorites WHERE recipe_id = ?", [recipeId]);
+    await db.query("DELETE FROM ratings WHERE recipe_id = ?", [recipeId]);
+    await db.query("DELETE FROM comments WHERE recipe_id = ?", [recipeId]);
+    await db.query("DELETE FROM recipes WHERE id = ?", [recipeId]);
+    if (recipe && recipe.image) {
+      const imagePath = path.join(__dirname, "../public", recipe.image);
+      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    }
+    req.flash("success_msg", "Đã xóa bài viết.");
+  } catch (err) {
+    console.error("Lỗi xóa bài:", err);
+    req.flash("error_msg", "Không thể xóa bài viết.");
+  }
+  res.redirect("/admin/posts");
+});
+
+// Comment management list + delete
+router.post("/comments/:id/delete", requireAdmin, async (req, res) => {
+  const commentId = parseInt(req.params.id);
+  if (isNaN(commentId)) {
+    req.flash("error_msg", "ID bình luận không hợp lệ!");
+    return res.redirect("/admin/posts");
+  }
+  try {
+    await db.query("DELETE FROM comments WHERE id = ?", [commentId]);
+    req.flash("success_msg", "Đã xóa bình luận.");
+  } catch (err) {
+    console.error("Lỗi xóa bình luận:", err);
+    req.flash("error_msg", "Không thể xóa bình luận.");
+  }
+  res.redirect("/admin/posts");
+});
+
 // Moderation page: list/search by status
 router.get("/review", requireAdmin, async (req, res) => {
   try {

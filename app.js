@@ -55,16 +55,18 @@ app.get("/", async (req, res) => {
     const limit = 30;
     const offset = (page - 1) * limit;
 
-    let query = `SELECT r.*, u.username FROM recipes r LEFT JOIN users u ON r.user_id = u.id`;
-    let countQuery = `SELECT COUNT(*) as total FROM recipes`;
-    let params = [],
-      countParams = [];
+    let query = `SELECT r.*, u.username FROM recipes r LEFT JOIN users u ON r.user_id = u.id WHERE r.status = 'approved'`;
+    let countQuery = `SELECT COUNT(*) as total FROM recipes WHERE status = 'approved'`;
+    const params = [];
+    const countParams = [];
 
-    if (req.query.search) {
-      const term = `%${req.query.search}%`;
-      query += ` WHERE r.title LIKE ? OR r.description LIKE ? OR r.ingredients LIKE ?`;
-      countQuery += ` WHERE title LIKE ? OR description LIKE ? OR ingredients LIKE ?`;
-      params = countParams = [term, term, term];
+    const searchTerm = (req.query.search || "").trim();
+    if (searchTerm) {
+      const term = `%${searchTerm}%`;
+      query += ` AND (r.title COLLATE utf8mb4_general_ci LIKE ? OR r.description COLLATE utf8mb4_general_ci LIKE ? OR r.ingredients COLLATE utf8mb4_general_ci LIKE ?)`;
+      countQuery += ` AND (title COLLATE utf8mb4_general_ci LIKE ? OR description COLLATE utf8mb4_general_ci LIKE ? OR ingredients COLLATE utf8mb4_general_ci LIKE ?)`;
+      params.push(term, term, term);
+      countParams.push(term, term, term);
     }
 
     const [[{ total }]] = await db.query(countQuery, countParams);

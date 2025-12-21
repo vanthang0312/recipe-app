@@ -153,29 +153,3 @@
         </div>
       </div>
     </nav>
-
-    <div class="container mt-5 pt-4 alerts">
-      <% if (success_msg && success_msg.length > 0) { %>
-      <div
-        class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm alerts__msg alerts__msg--success"
-      >
-        <i class="fas fa-check-circle me-2"></i><%= success_msg %>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
-      <% } %> <% if (error_msg && error_msg.length > 0) { %>
-      <div
-        class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm alerts__msg alerts__msg--error"
-      >
-        <i class="fas fa-exclamation-triangle me-2"></i><%= error_msg %>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
-      <% } %>
-    </div>

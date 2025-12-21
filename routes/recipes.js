@@ -1,4 +1,3 @@
-// routes/recipes.js ƒ?" PHIASN B §›N HOA?N CH ¯^NH 2025 (Ž?AŸ CA" VIDEO + BAONH LU §ªN + RATING + KHA"NG L ¯-I)
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
@@ -7,14 +6,10 @@ const path = require("path");
 const fs = require("fs");
 const { body, validationResult } = require("express-validator");
 
-// B §rT BU ¯~C PH §›I CA" DA'NG NA?Y Ž? ¯, AJAX + COMMENT + RATING CH §ÿY Ž?’_ ¯›C!
-router.use(express.json());
-
-// ==================== C §U HAONH MULTER (UPLOAD  §›NH) ====================
+// Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = "public/uploads";
-    // T §­o th’ø m ¯c n §¨u ch’øa t ¯"n t §­i
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -32,57 +27,51 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|gif|webp/;
     const extname = filetypes.test(
       path.extname(file.originalname).toLowerCase()
     );
     const mimetype = filetypes.test(file.mimetype);
-    if (extname && mimetype) {
-      cb(null, true);
-    } else {
-      cb(new Error("Ch ¯% ch §p nh §-n  §œnh (jpg, png, gif, webp)!"));
-    }
+    if (extname && mimetype) return cb(null, true);
+    cb(new Error("Chỉ chấp nhận ảnh (jpg, png, gif, webp)"));
   },
 }).single("recipeImage");
 
-// ==================== MIDDLEWARE Ž?Ž,NG NH §ªP ====================
+// Middleware require login
 const requireLogin = (req, res, next) => {
   if (!req.session.user) {
     req.flash(
       "error_msg",
-      "Vui lAýng Ž`ŽŸng nh §-p Ž` ¯Ÿ th ¯ñc hi ¯Øn hAÿnh Ž` ¯Tng nAÿy!"
+      "Vui lòng đăng nhập để thực hiện hành động này!"
     );
     return res.redirect("/login");
   }
   next();
 };
 
-// ==================== THASM MA"N M ¯sI (Ž?AŸ CA" VIDEO) ====================
-// Lưu ý đặt /add tr’ø ¯>c /:id để tr ¯`nh b §_t /recipes/add thành id="add"
+// Add recipe form
 router.get("/add", requireLogin, (req, res) => {
-  res.render("add-recipe", { title: "ThA¦m cA'ng th ¯cc m ¯>i" });
+  res.render("add-recipe", { title: "Thêm công thức mới" });
 });
 
+// Add recipe submit
 router.post(
   "/add",
   requireLogin,
   upload,
   [
-    body("title")
-      .trim()
-      .notEmpty()
-      .withMessage("TiA¦u Ž` ¯? khA'ng Ž`’ø ¯œc Ž` ¯Ÿ tr ¯`ng"),
+    body("title").trim().notEmpty().withMessage("Tiêu đề không được trống"),
     body("ingredients")
       .trim()
       .notEmpty()
-      .withMessage("NguyA¦n li ¯Øu b §_t bu ¯Tc"),
+      .withMessage("Nguyên liệu bắt buộc"),
     body("instructions")
       .trim()
       .notEmpty()
-      .withMessage("H’ø ¯>ng d §®n b §_t bu ¯Tc"),
+      .withMessage("Hướng dẫn bắt buộc"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -98,7 +87,7 @@ router.post(
     }
 
     if (!req.file) {
-      req.flash("error_msg", "Vui lAýng ch ¯?n  §œnh mA3n ŽŸn!");
+      req.flash("error_msg", "Vui lòng chọn ảnh món ăn!");
       return res.redirect("/recipes/add");
     }
 
@@ -108,8 +97,8 @@ router.post(
     try {
       await db.query(
         `INSERT INTO recipes 
-         (title, description, image, video, ingredients, instructions, user_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (title, description, image, video, ingredients, instructions, user_id, status) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           title.trim(),
           description?.trim() || null,
@@ -122,18 +111,18 @@ router.post(
       );
       req.flash(
         "success_msg",
-        "Ž?ŽŸng mA3n thAÿnh cA'ng! M ¯?i ng’ø ¯?i Ž`ang ch ¯? khA­m phA­"
+        "Đăng món thành công! Món đang chờ admin duyệt."
       );
       res.redirect("/");
     } catch (err) {
-      console.error("L ¯-i thA¦m mA3n:", err);
-      req.flash("error_msg", "L ¯-i server, vui lAýng th ¯- l §­i!");
+      console.error("Lỗi thêm món:", err);
+      req.flash("error_msg", "Lỗi server, vui lòng thử lại!");
       res.redirect("/recipes/add");
     }
   }
 );
 
-// ==================== S ¯ªA CA"NG TH ¯"C (Ž?AŸ CA" VIDEO) ====================
+// Edit recipe form
 router.get("/:id/edit", requireLogin, async (req, res) => {
   try {
     const [recipes] = await db.query(
@@ -143,20 +132,21 @@ router.get("/:id/edit", requireLogin, async (req, res) => {
     if (recipes.length === 0) {
       req.flash(
         "error_msg",
-        "KhA'ng tAªm th §y mA3n ho §úc b §­n khA'ng ph §œi ch ¯ s ¯Y h ¯_u!"
+        "Không tìm thấy món hoặc bạn không phải chủ sở hữu!"
       );
       return res.redirect("/");
     }
     res.render("edit-recipe", {
-      title: "S ¯-a cA'ng th ¯cc - " + recipes[0].title,
+      title: "Sửa công thức - " + recipes[0].title,
       recipe: recipes[0],
     });
   } catch (err) {
-    req.flash("error_msg", "L ¯-i t §œi trang s ¯-a!");
+    req.flash("error_msg", "Lỗi tải trang sửa!");
     res.redirect("/");
   }
 });
 
+// Edit recipe submit
 router.post(
   "/:id/edit",
   requireLogin,
@@ -185,7 +175,6 @@ router.post(
 
     if (req.file) {
       imagePath = "/uploads/" + req.file.filename;
-      // XA3a  §œnh cc n §¨u cA3
       if (oldImage) {
         const oldPath = path.join(__dirname, "../public", oldImage);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -208,17 +197,17 @@ router.post(
           req.session.user.id,
         ]
       );
-      req.flash("success_msg", "S ¯-a mA3n thAÿnh cA'ng!");
+      req.flash("success_msg", "Sửa món thành công!");
       res.redirect(`/recipes/${req.params.id}`);
     } catch (err) {
-      console.error("L ¯-i s ¯-a mA3n:", err);
-      req.flash("error_msg", "L ¯-i s ¯-a mA3n!");
+      console.error("Lỗi sửa món:", err);
+      req.flash("error_msg", "Lỗi sửa món!");
       res.redirect(`/recipes/${req.params.id}/edit`);
     }
   }
 );
 
-// ==================== XA"A CA"NG TH ¯"C ====================
+// Delete recipe
 router.post("/:id/delete", requireLogin, async (req, res) => {
   try {
     const [recipes] = await db.query(
@@ -229,7 +218,7 @@ router.post("/:id/delete", requireLogin, async (req, res) => {
     if (recipes.length === 0) {
       req.flash(
         "error_msg",
-        "KhA'ng tAªm th §y mA3n ho §úc b §­n khA'ng cA3 quy ¯?n xA3a!"
+        "Không tìm thấy món hoặc bạn không có quyền xóa!"
       );
       return res.redirect("/");
     }
@@ -240,21 +229,24 @@ router.post("/:id/delete", requireLogin, async (req, res) => {
       if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     }
 
+    await db.query("DELETE FROM favorites WHERE recipe_id = ?", [req.params.id]);
+    await db.query("DELETE FROM ratings WHERE recipe_id = ?", [req.params.id]);
+    await db.query("DELETE FROM comments WHERE recipe_id = ?", [req.params.id]);
     await db.query("DELETE FROM recipes WHERE id = ? AND user_id = ?", [
       req.params.id,
       req.session.user.id,
     ]);
 
-    req.flash("success_msg", "Ž?Aœ xA3a mA3n thAÿnh cA'ng!");
+    req.flash("success_msg", "Đã xóa món thành công!");
     res.redirect("/");
   } catch (err) {
-    console.error("L ¯-i xA3a mA3n:", err);
-    req.flash("error_msg", "L ¯-i xA3a mA3n!");
+    console.error("Lỗi xóa món:", err);
+    req.flash("error_msg", "Lỗi xóa món!");
     res.redirect("/");
   }
 });
 
-// ==================== XEM CHI TI §_T CA"NG TH ¯"C ====================
+// View recipe detail
 router.get("/:id", async (req, res) => {
   try {
     const [recipes] = await db.query(
@@ -266,13 +258,23 @@ router.get("/:id", async (req, res) => {
     );
 
     if (recipes.length === 0) {
-      req.flash("error_msg", "KhA'ng tAªm th §y cA'ng th ¯cc!");
+      req.flash("error_msg", "Không tìm thấy công thức!");
       return res.redirect("/");
     }
 
     const recipe = recipes[0];
+    const user = req.session.user;
+    const isOwner = user && recipe.user_id === user.id;
+    const isAdmin =
+      user &&
+      ((user.role || "").toLowerCase() === "admin" ||
+        ((process.env.ADMIN_USER || "").toLowerCase().trim() ===
+          (user.username || "").toLowerCase().trim()));
+    if (recipe.status && recipe.status !== "approved" && !isOwner && !isAdmin) {
+      req.flash("error_msg", "Bài này đang chờ duyệt.");
+      return res.redirect("/");
+    }
 
-    // Ki ¯Ÿm tra Ž`Aœ yA¦u thA-ch ch’øa (n §¨u Ž`Aœ Ž`ŽŸng nh §-p)
     let isFavorited = false;
     if (req.session.user) {
       const [fav] = await db.query(
@@ -286,24 +288,26 @@ router.get("/:id", async (req, res) => {
       title: recipe.title,
       recipe,
       isFavorited,
+      isOwner,
+      isAdmin,
     });
   } catch (err) {
-    console.error("L ¯-i xem chi ti §¨t:", err);
-    req.flash("error_msg", "L ¯-i t §œi cA'ng th ¯cc!");
+    console.error("Lỗi xem chi tiết:", err);
+    req.flash("error_msg", "Lỗi tải công thức!");
     res.redirect("/");
   }
 });
 
-// ==================== YASU THA?CH / B ¯Z YASU THA?CH ====================
+// Favorite / unfavorite
 router.post("/:id/favorite", requireLogin, async (req, res) => {
   try {
     await db.query(
       "INSERT IGNORE INTO favorites (user_id, recipe_id) VALUES (?, ?)",
       [req.session.user.id, req.params.id]
     );
-    req.flash("success_msg", "Ž?Aœ thA¦m vAÿo mA3n yA¦u thA-ch");
+    req.flash("success_msg", "Đã thêm vào món yêu thích");
   } catch (err) {
-    req.flash("error_msg", "L ¯-i thA¦m yA¦u thA-ch");
+    req.flash("error_msg", "Lỗi thêm yêu thích");
   }
   res.redirect("back");
 });
@@ -314,14 +318,14 @@ router.post("/:id/unfavorite", requireLogin, async (req, res) => {
       "DELETE FROM favorites WHERE user_id = ? AND recipe_id = ?",
       [req.session.user.id, req.params.id]
     );
-    req.flash("success_msg", "Ž?Aœ b ¯? yA¦u thA-ch");
+    req.flash("success_msg", "Đã bỏ yêu thích");
   } catch (err) {
-    req.flash("error_msg", "L ¯-i b ¯? yA¦u thA-ch");
+    req.flash("error_msg", "Lỗi bỏ yêu thích");
   }
   res.redirect("back");
 });
 
-// ==================== L §Y RATING + COMMENT ƒ?" CHO M ¯OI NG’_ ¯oI XEM ====================
+// Rating + comments data
 router.get("/:id/rating-comments", async (req, res) => {
   try {
     const recipeId = req.params.id;
@@ -356,12 +360,12 @@ router.get("/:id/rating-comments", async (req, res) => {
       comments: comments || [],
     });
   } catch (err) {
-    console.error("L ¯-i l §y rating/comments:", err);
-    res.status(500).json({ error: "L ¯-i server" });
+    console.error("Lỗi lấy rating/comments:", err);
+    res.status(500).json({ error: "Lỗi server" });
   }
 });
 
-// ==================== THASM RATING ====================
+// Add rating
 router.post("/:id/rating", requireLogin, async (req, res) => {
   try {
     const recipeId = req.params.id;
@@ -369,7 +373,7 @@ router.post("/:id/rating", requireLogin, async (req, res) => {
     const { rating } = req.body;
 
     if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: "Rating ph §œi t ¯® 1-5 sao" });
+      return res.status(400).json({ error: "Rating phải từ 1-5 sao" });
     }
 
     await db.query(
@@ -384,12 +388,12 @@ router.post("/:id/rating", requireLogin, async (req, res) => {
 
     res.json({ success: true, avgRating: Number(avgRating || 0).toFixed(1) });
   } catch (err) {
-    console.error("L ¯-i thA¦m rating:", err);
-    res.status(500).json({ error: "L ¯-i server" });
+    console.error("Lỗi thêm rating:", err);
+    res.status(500).json({ error: "Lỗi server" });
   }
 });
 
-// ==================== THASM COMMENT ====================
+// Add comment
 router.post("/:id/comment", requireLogin, async (req, res) => {
   try {
     const recipeId = req.params.id;
@@ -399,7 +403,7 @@ router.post("/:id/comment", requireLogin, async (req, res) => {
     if (!content || content.trim().length < 5) {
       return res
         .status(400)
-        .json({ error: "Comment ph §œi A-t nh §t 5 kA« t ¯ñ" });
+        .json({ error: "Comment phải ít nhất 5 ký tự" });
     }
 
     await db.query(
@@ -416,8 +420,8 @@ router.post("/:id/comment", requireLogin, async (req, res) => {
 
     res.json({ success: true, comment: newComment });
   } catch (err) {
-    console.error("L ¯-i thA¦m comment:", err);
-    res.status(500).json({ error: "L ¯-i server" });
+    console.error("Lỗi thêm comment:", err);
+    res.status(500).json({ error: "Lỗi server" });
   }
 });
 

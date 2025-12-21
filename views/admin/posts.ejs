@@ -1,0 +1,111 @@
+<%- include('./partials/header') %>
+
+<div class="admin-hero mb-4">
+  <div>
+    <p class="text-light mb-1">Admin / Quản lý bài viết</p>
+    <h1 class="text-white fw-bold">Bài viết</h1>
+    <p class="text-light mb-0">Duyệt, chỉnh sửa hoặc xóa bài; theo dõi bình luận gần đây.</p>
+  </div>
+</div>
+
+<div class="card border-0 shadow-lg rounded-4 mb-4">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Tiêu đề</th>
+            <th>Người viết</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!posts || posts.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-4">Chưa có bài viết.</td></tr>
+          <% } %>
+          <% posts.forEach(p => { %>
+          <tr>
+            <td><%= p.id %></td>
+            <td class="fw-semibold"><%= p.title %></td>
+            <td><%= p.username || 'Ẩn danh' %></td>
+            <td>
+              <span class="badge <%= p.status === 'approved' ? 'bg-success' : (p.status === 'rejected' ? 'bg-danger' : 'bg-warning text-dark') %> text-uppercase">
+                <%= p.status %>
+              </span>
+            </td>
+            <td><%= p.created_at ? new Date(p.created_at).toLocaleString('vi-VN') : '---' %></td>
+            <td class="d-flex flex-wrap gap-2">
+              <a href="/recipes/<%= p.id %>" target="_blank" class="btn btn-light btn-sm rounded-pill px-3">
+                <i class="fas fa-eye me-1"></i>Xem
+              </a>
+              <a href="/admin/posts/<%= p.id %>/edit" class="btn btn-warning btn-sm rounded-pill px-3">
+                <i class="fas fa-edit me-1"></i>Sửa
+              </a>
+              <form method="POST" action="/admin/posts/<%= p.id %>/delete" onsubmit="return confirm('Xóa bài này?');">
+                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                  <i class="fas fa-trash me-1"></i>Xóa
+                </button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-lg rounded-4">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h4 class="mb-0 text-dark fw-bold">Bình luận gần đây</h4>
+      <span class="badge bg-secondary">Tối đa 200</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Nội dung</th>
+            <th>Người viết</th>
+            <th>Bài đăng</th>
+            <th>Thời gian</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!comments || comments.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-4">Chưa có bình luận.</td></tr>
+          <% } %>
+          <% comments.forEach(c => { %>
+          <tr>
+            <td><%= c.id %></td>
+            <td class="text-truncate" style="max-width: 320px;"><%= c.content %></td>
+            <td><%= c.user_name || 'Ẩn danh' %></td>
+            <td>
+              <% if (c.recipe_id) { %>
+              <a href="/recipes/<%= c.recipe_id %>" target="_blank" class="text-decoration-none">
+                <i class="fas fa-link me-1"></i><%= c.recipe_title || 'Bài viết' %>
+              </a>
+              <% } else { %>---<% } %>
+            </td>
+            <td><%= c.created_at ? new Date(c.created_at).toLocaleString('vi-VN') : '---' %></td>
+            <td>
+              <form method="POST" action="/admin/comments/<%= c.id %>/delete" onsubmit="return confirm('Xóa bình luận này?');">
+                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                  <i class="fas fa-trash me-1"></i>Xóa
+                </button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('./partials/footer') %>
