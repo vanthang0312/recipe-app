@@ -1,29 +1,24 @@
-﻿<%- include('partials/header') %>
+<%- include('partials/header') %>
 
 <div class="container py-5 min-vh-100 add">
   <div class="row justify-content-center">
     <div class="col-lg-10 add__hero text-center mb-5">
       <p class="text-uppercase fw-bold small text-danger add__eyebrow">
-        <i class="fas fa-fire me-2"></i>Chia sáº» mÃ³n ngon cá»§a báº¡n
+        <i class="fas fa-fire me-2"></i>Chia sẻ món ngon của bạn
       </p>
-      <h1 class="display-4 fw-bold add__title">ThÃªm cÃ´ng thá»©c má»›i</h1>
+      <h1 class="display-4 fw-bold add__title">Thêm công thức mới</h1>
       <p class="lead text-muted col-lg-8 mx-auto add__subtitle">
-        Äiá»n Ä‘áº§y Ä‘á»§ nguyÃªn liá»‡u, bÆ°á»›c lÃ m vÃ  hÃ¬nh áº£nh Ä‘á»ƒ má»i ngÆ°á»i cÃ³ thá»ƒ lÃ m
-        theo nhanh nháº¥t.
+        Điền đầy đủ nguyên liệu, bước làm và hình ảnh để mọi người có thể làm theo nhanh nhất.
       </p>
     </div>
   </div>
 
   <div class="row justify-content-center">
     <div class="col-lg-9 col-xl-8">
-      <div
-        class="card shadow-lg border-0 rounded-4 overflow-hidden add__form-card"
-      >
+      <div class="card shadow-lg border-0 rounded-4 overflow-hidden add__form-card">
         <div class="card-body p-5 add__form-body">
           <% if (typeof error_msg !== 'undefined' && error_msg) { %>
-          <div
-            class="alert alert-danger rounded-4 d-flex align-items-center mb-4"
-          >
+          <div class="alert alert-danger rounded-4 d-flex align-items-center mb-4">
             <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
             <div><%= error_msg %></div>
           </div>
@@ -36,11 +31,11 @@
             enctype="multipart/form-data"
             novalidate
           >
-            <!-- Upload áº£nh -->
+            <!-- Upload ảnh -->
             <div class="mb-5 add__field">
               <label class="form-label fw-bold text-danger fs-5 add__label">
                 <i class="fas fa-camera"></i>
-                áº¢nh mÃ³n Äƒn (báº¯t buá»™c)
+                Ảnh món ăn (bắt buộc)
               </label>
               <div class="upload-dropzone" id="upload-dropzone">
                 <input
@@ -52,62 +47,46 @@
                   class="upload-dropzone__input"
                 />
                 <div id="upload-dropzone__preview" class="text-center">
-                  <i
-                    class="fas fa-cloud-upload-alt text-danger upload-dropzone__icon"
-                  ></i>
-                  <p class="fw-bold text-danger fs-4 mb-1">
-                    Chá»n áº£nh Ä‘á»ƒ táº£i lÃªn
-                  </p>
-                  <small class="text-muted d-block"
-                    >JPG, PNG, WebP â€” tá»‘i Ä‘a 5MB</small
-                  >
+                  <i class="fas fa-cloud-upload-alt text-danger upload-dropzone__icon"></i>
+                  <p class="fw-bold text-danger fs-4 mb-1">Chọn ảnh để tải lên</p>
+                  <small class="text-muted d-block">JPG, PNG, WebP tối đa 5MB</small>
                 </div>
               </div>
             </div>
 
-            <!-- TiÃªu Ä‘á» -->
+            <!-- Tiêu đề -->
             <div class="mb-4 add__field">
-              <label
-                class="form-label fw-bold text-danger fs-5 add__label"
-                for="add__title"
-              >
-                TiÃªu Ä‘á» mÃ³n Äƒn
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="add__title">
+                Tiêu đề món ăn
               </label>
               <input
                 id="add__title"
                 type="text"
                 name="title"
                 class="form-control form-control-lg rounded-pill shadow-sm"
-                placeholder="VD: Phá»Ÿ bÃ² HÃ  Ná»™i truyá»n thá»‘ng"
+                placeholder="VD: Phở bò Hà Nội truyền thống"
                 required
               />
             </div>
 
-            <!-- MÃ´ táº£ -->
+            <!-- Mô tả -->
             <div class="mb-4 add__field">
-              <label
-                class="form-label fw-bold text-danger add__label"
-                for="add__description"
-              >
-                MÃ´ táº£ ngáº¯n (tÃ¹y chá»n)
+              <label class="form-label fw-bold text-danger add__label" for="add__description">
+                Mô tả ngắn (tùy chọn)
               </label>
               <textarea
                 id="add__description"
                 name="description"
                 class="form-control rounded-3"
                 rows="3"
-                placeholder="MÃ³n phá»Ÿ gia truyá»n 3 Ä‘á»i, nÆ°á»›c dÃ¹ng ninh tá»« xÆ°Æ¡ng bÃ² tÆ°Æ¡i..."
+                placeholder="Món phở gia truyền 3 đời, nước dùng ninh từ xương bò tươi..."
               ></textarea>
             </div>
 
             <!-- Video -->
             <div class="mb-5 add__field">
-              <label
-                class="form-label fw-bold text-danger fs-5 add__label"
-                for="add__video"
-              >
-                <i class="fas fa-video me-2"></i>Video hÆ°á»›ng dáº«n (YouTube/Vimeo)
-                â€” tÃ¹y chá»n
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="add__video">
+                <i class="fas fa-video me-2"></i>Video hướng dẫn (YouTube/Vimeo) - tùy chọn
               </label>
               <div class="input-group input-group-lg">
                 <span class="input-group-text bg-danger text-white">
@@ -118,21 +97,18 @@
                   type="url"
                   name="video"
                   class="form-control rounded-end shadow-sm"
-                  placeholder="https://www.youtube.com/watch?v=abc123 hoáº·c https://youtu.be/abc123"
+                  placeholder="https://www.youtube.com/watch?v=abc123 hoặc https://youtu.be/abc123"
                 />
               </div>
               <div class="form-text mt-2">
-                DÃ¡n link YouTube hoáº·c Vimeo, hoáº·c Ä‘á»ƒ trá»‘ng náº¿u khÃ´ng cÃ³ video.
+                Dán link YouTube hoặc Vimeo, hoặc để trống nếu không có video.
               </div>
             </div>
 
-            <!-- NguyÃªn liá»‡u -->
+            <!-- Nguyên liệu -->
             <div class="mb-4 add__field">
-              <label
-                class="form-label fw-bold text-danger fs-5 add__label"
-                for="add__ingredients"
-              >
-                NguyÃªn liá»‡u (má»—i dÃ²ng 1 thÃ nh pháº§n)
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="add__ingredients">
+                Nguyên liệu (mỗi dòng 1 thành phần)
               </label>
               <textarea
                 id="add__ingredients"
@@ -140,17 +116,14 @@
                 class="form-control rounded-3"
                 rows="8"
                 required
-                placeholder="500g thá»‹t bÃ²&#10;300g bÃ¡nh phá»Ÿ tÆ°Æ¡i&#10;2kg xÆ°Æ¡ng bÃ²&#10;HÃ nh lÃ¡, rau thÆ¡m, giÃ¡ trá»¥ng..."
+                placeholder="500g thịt bò&#10;300g bánh phở tươi&#10;2kg xương bò&#10;Hành lá, rau thơm, gia vị..."
               ></textarea>
             </div>
 
-            <!-- CÃ¡ch lÃ m -->
+            <!-- Cách làm -->
             <div class="mb-5 add__field">
-              <label
-                class="form-label fw-bold text-danger fs-5 add__label"
-                for="add__steps"
-              >
-                CÃ¡ch lÃ m (má»—i dÃ²ng 1 bÆ°á»›c)
+              <label class="form-label fw-bold text-danger fs-5 add__label" for="add__steps">
+                Cách làm (mỗi dòng 1 bước)
               </label>
               <textarea
                 id="add__steps"
@@ -158,17 +131,16 @@
                 class="form-control rounded-3"
                 rows="12"
                 required
-                placeholder="1. Rá»­a xÆ°Æ¡ng bÃ² sáº¡ch, tráº§n sÆ¡ qua nÆ°á»›c sÃ´i...&#10;2. NÆ°á»›ng gá»«ng + hÃ nh tÃ¢y cho thÆ¡m...&#10;3. Ninh xÆ°Æ¡ng 10-12 tiáº¿ng..."
+                placeholder="Sơ chế bước 1...&#10;Nấu nước dùng bước 2...&#10;..."
               ></textarea>
             </div>
 
-            <!-- Submit -->
-            <div class="text-center add__actions">
+            <div class="d-grid">
               <button
                 type="submit"
-                class="btn btn-danger btn-lg px-5 rounded-pill shadow-lg fw-bold py-3 add__submit"
+                class="btn btn-danger btn-lg rounded-pill fw-bold shadow-lg add__submit"
               >
-                <i class="fas fa-paper-plane me-3"></i>ÄÄƒng mÃ³n ngay
+                <i class="fas fa-upload me-2"></i>Đăng công thức
               </button>
             </div>
           </form>
@@ -179,5 +151,5 @@
 </div>
 
 <%- include('partials/footer') %>
-<script src='/js/add-recipe.js'></script>
 
+<script src="/js/add-recipe.js"></script>

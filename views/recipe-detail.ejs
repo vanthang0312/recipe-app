@@ -1,7 +1,10 @@
 <%- include('partials/header') %>
 
 <style>
-  .rating-highlight { color: #d32f2f; font-weight: 700; }
+  .rating-highlight {
+    color: #d32f2f;
+    font-weight: 700;
+  }
 </style>
 
 <div
@@ -68,8 +71,7 @@
       <img
         src="<%= imageSrc %>"
         alt="<%= recipe.title %>"
-        class="img-fluid rounded-4 shadow-lg mb-5 w-100"
-        style="max-height: 500px; object-fit: cover"
+        class="img-fluid rounded-4 shadow-sm w-100 recipe-cover-img"
         onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80'"
       />
       <% } %>
@@ -99,11 +101,8 @@
       <ul class="list-group mb-5">
         <% instructionsList.forEach((step, i) => { %>
         <li class="list-group-item py-4 border-bottom">
-          <div class="d-flex">
-            <div
-              class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-4"
-              style="width: 40px; height: 40px"
-            >
+          <div class="d-flex align-items-start">
+            <div class="step-number bg-danger text-white d-flex align-items-center justify-content-center me-4 flex-shrink-0">
               <%= i + 1 %>
             </div>
             <p class="mb-0 lead"><%= step %></p>
@@ -161,7 +160,7 @@
     </div>
 
     <div class="col-lg-4">
-      <div class="sticky-top" style="top: 100px">
+      <div class="sticky-top sticky-top-100">
         <div class="card border-0 shadow-lg rounded-4 mb-4">
           <div class="card-body text-center p-4">
             <% if (user) { %>

@@ -55,7 +55,20 @@ app.get("/", async (req, res) => {
     const limit = 30;
     const offset = (page - 1) * limit;
 
-    let query = `SELECT r.*, u.username FROM recipes r LEFT JOIN users u ON r.user_id = u.id WHERE r.status = 'approved'`;
+    let query = `
+      SELECT
+        r.*,
+        u.username,
+        COALESCE(rt.avgRating, 0) AS avgRating
+      FROM recipes r
+      LEFT JOIN users u ON r.user_id = u.id
+      LEFT JOIN (
+        SELECT recipe_id, AVG(rating) AS avgRating
+        FROM ratings
+        GROUP BY recipe_id
+      ) rt ON r.id = rt.recipe_id
+      WHERE r.status = 'approved'
+    `;
     let countQuery = `SELECT COUNT(*) as total FROM recipes WHERE status = 'approved'`;
     const params = [];
     const countParams = [];

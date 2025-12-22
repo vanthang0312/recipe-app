@@ -24,7 +24,10 @@
   <div class="row justify-content-center">
     <div class="col-xl-10">
       <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 position-relative">
-        <div class="profile-cover" style="background-image: url('<%= coverUrl %>')">
+        <div
+          class="profile-cover"
+          style="background-image: url('<%= coverUrl %>')"
+        >
           <div class="cover-overlay"></div>
         </div>
         <div class="card-body p-4 p-md-5">
@@ -33,7 +36,7 @@
               <img
                 src="<%= avatarUrl %>"
                 alt="Avatar"
-                class="rounded-circle border border-3 border-white shadow-lg profile-avatar"
+                class="rounded-circle border border-3 border-white shadow-lg profile-avatar object-fit-cover"
               />
             </div>
             <div class="flex-grow-1 mt-3 mt-md-0">
@@ -71,7 +74,7 @@
               <h4 class="text-danger fw-bold mb-3">
                 <i class="fas fa-user me-2"></i>Thông tin cá nhân
               </h4>
-              <table class="table table-borderless mb-0">
+              <table class="table table-borderless mb-0 profile-table">
                 <tr>
                   <td class="fw-semibold text-muted">Tên đăng nhập</td>
                   <td class="fw-bold text-dark"><%= user.username %></td>
@@ -150,29 +153,5 @@
     </div>
   </div>
 </div>
-
-<style>
-  .profile-cover {
-    height: 220px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-  }
-  .cover-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55));
-  }
-  .profile-avatar {
-    width: 140px;
-    height: 140px;
-    object-fit: cover;
-    margin-top: -90px;
-    background: #fff;
-  }
-  .table td {
-    padding: 0.6rem 0;
-  }
-</style>
 
 <%- include('partials/footer') %>
